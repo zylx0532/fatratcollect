@@ -532,7 +532,6 @@ function frc_spider()
                 <li><a href="#list" data-toggle="tab">列表爬虫</a></li>
                 <li><a href="#historypage" data-toggle="tab">列表爬虫->分页数据爬取</a></li>
                 <li><a href="#details" data-toggle="tab">详情爬虫</a></li>
-                <li><a href="#todolist" data-toggle="tab">TODO & 胖鼠</a></li>
             </ul>
             <div class="tab-content spider-tab-content">
                 <input type="hidden" hidden id="request_url" value="<?php echo admin_url('admin-ajax.php'); ?>">
@@ -729,58 +728,6 @@ function frc_spider()
                         </tr>
                     </table>
                     <?php } ?>
-                </div>
-                <div class="tab-pane fade" id="todolist">
-                    <p class="p-tips-style"><?php esc_html_e(FRC_Api_Error::FRC_TIPS[array_rand(FRC_Api_Error::FRC_TIPS, 1)]); ?></p>
-                    <div class="todo-and-author-class">
-                        <h3>TODO:</h3>
-                        <ul>
-                        <li>Todo: 写图片地方优化</li>
-                        <li>Todo: 列表爬取 button disabled (遗留)</li>
-                        <li>Todo: 配置 发布列表页 鼠标移动到区域后 才显示选择</li>
-                        <li>Todo: Add Log</li>
-                        <li>Todo: 采集时是否增加采集作者?时间?</li>
-                        <li>Todo: 发布时增加选择发布分类?发布人?等功能?</li>
-                        <li>Todo: 给列表和详情 支持ajax页面爬取?</li>
-                        <li>Todo: ok 内容中Img图片自动识别 图片属性src? data-src?</li>
-                        <li>Todo: 增加简书 头条等其他和微信一样默认爬虫?</li>
-                        <li>Todo: 多线程爬虫.爬虫速度优化..</li>
-                        <li>Todo: 各种采集/页面 错误提示 更加丰富? 让用户看到所有错误.</li>
-                        <li>Todo: ok 详情页面 访问路径判断是(相对/绝对)路径（紧急）</li>
-                        <li>Todo: 教会用户会使用debug模式，在新建配置页下方</li>
-                        <li>Todo: FAQ丰富一下.</li>
-                        <li>Todo: 是否要模仿一些其他采集工具的小功能选项? 有必要吗?</li>
-                        <li>Todo: ok 数据中心文章预览功能</li>
-                        <li>Todo: ok 配置中心 配置删除功能</li>
-                        <li>Todo: ok 各种操作的友好提示</li>
-                        <li>Todo: ok 自定义详情配置</li>
-                        <li>Todo: ok 优化一些前端体验</li>
-                        <li>Todo: ok 优化掉了一个log表</li>
-                        <li>Todo: ok 优化掉了服务端无数行代码</li>
-                        <li>Todo: ok 发一个稳定版本 应该不会大改框架了</li>
-                        <li>Todo: 胖鼠和其他采集器不一样。不需要脱离wordpress 完美支持jquery语法。想采什么采什么。可以删除内容任何标签</li>
-                        <li>Todo: 图片因为站群的原因, 目前整站使用相对路径。后期考虑让用户选择 相对/绝对路径.</li>
-                        <li>Todo: 定时爬取已自动开启！ 一日两次（每次间隔12小时）第一次运行在你安装胖鼠的时候. (后期是优化用户可以自定义时间, 增加用户可控制开关)</li>
-                        <li>Todo: 想看爬虫下次执行时间? 安装一个插件 Cron Manager 里面有两个 frc_ 开头的任务就是咱们的定时程序</li>
-                        <li>Todo: ...</li>
-                        </ul>
-                        <hr />
-                        <h4>胖鼠留:</h4>
-                        <ul>
-                            <li>胖鼠采集: <a href="https://github.com/fbtopcn/fatratcollect">Github</a> 欢迎 Star. Fork.</li>
-                            <li>大家可以使用所有功能, 功能全部无保留给大家免费开放.(自动采集/自动发布)</li>
-                            <li>有用的不爽的地方, 大家可以联系我, 接受大家提出的合理的需求, 迭代.</li>
-                            <li>配置默认给咱们留了一些, 大家前几次不会写可以照葫芦画瓢. 还有疑问可以来找鼠友帮忙.</li>
-                            <li>胖鼠采集配置页.应该比较人性化了, 自我感觉上手使用应该不会超过20分钟. 胖鼠应该可以碾压插件库中的其他 某某某某 好多采集插件, 当然也有些做的不错的, 但是感觉代码随意了好多.</li>
-                            <li>胖鼠的设计思想-分三大块. 爬虫模块|配置模块|数据模块 爬虫模块主要使用配置模块的各种特色配置来爬取数据 配置模块为爬虫模块提供支持 数据模块支撑胖鼠各种特色发布功能!</li>
-                            <li>使用环境: Wordpress新版 Php7+ 版本 Mysql Nginx 没有要求, 服务器带宽也不要太慢, 毕竟爬虫嘛.不想去兼容PHP7以下的站点.麻烦.</li>
-                            <li>胖鼠声明: 作者原创; 供参考学习, 作者不承担任何法律风险. 前端Html使用<a href="http://www.bootcss.com/">Bootstrap</a> 采集基于<a href="https://www.querylist.cc/docs/guide/v4/overview">QueryList</a></li>
-                            <li>如果你用了觉得不错, 可以去给胖鼠<a href="https://wordpress.org/support/plugin/fat-rat-collect/reviews">打个分</a>!</li>
-                            <li>胖鼠Q群: 454049736</li>
-                            <li>2018年12月30日 02:24</li>
-                            <li><img src="<?php echo plugin_dir_url(dirname(__FILE__)).'images/fat-rat-128x128.png'  ?>" /></li>
-                        </ul>
-                    </div>
                 </div>
             </div>
         </div>
