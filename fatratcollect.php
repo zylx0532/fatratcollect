@@ -31,6 +31,7 @@ require_once(__DIR__ . '/vendor/autoload.php');
  */
 function frc_plugin_install(){
     global $wpdb;
+    global $frc_db_version;
 
     require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
 
@@ -76,8 +77,17 @@ function frc_plugin_install(){
             KEY `is_post` (`is_post`)
         )	$charset_collate; ";
     dbDelta( $sql );
+
+    add_option( 'frc_db_version', $frc_db_version );
 }
 register_activation_hook( __FILE__, 'frc_plugin_install' );
+
+/**
+ * Update
+ */
+//function frc_plugin_update() {
+//}
+//add_action( 'plugins_loaded', 'frc_plugin_update' );
 
 /**
  * Uninstall
@@ -85,11 +95,9 @@ register_activation_hook( __FILE__, 'frc_plugin_install' );
 function frc_plugin_uninstall() {
     global $wpdb;
 
-    $table_log      = $wpdb->prefix . 'fr_log'; // 过两天去掉
     $table_post     = $wpdb->prefix . 'fr_post';
     $table_options  = $wpdb->prefix . 'fr_options';
 
-    $wpdb->query( "DROP TABLE IF EXISTS $table_log" );
     $wpdb->query( "DROP TABLE IF EXISTS $table_options" );
     $wpdb->query( "DROP TABLE IF EXISTS $table_post" );
 
@@ -99,18 +107,27 @@ register_uninstall_hook(__FILE__, 'frc_plugin_uninstall');
 /**
  * Style && Script
  */
-function frc_loading_assets() {
-    // css
-    wp_register_style( 'fat-rat-bootstrap-css', plugins_url( 'css/bootstrap.min.css', __FILE__ ));
-    wp_enqueue_style( 'fat-rat-bootstrap-css' );
-    wp_register_style( 'fat-rat-css', plugins_url( 'css/fatrat.css', __FILE__ ));
-    wp_enqueue_style( 'fat-rat-css' );
+function frc_loading_assets( $hook ) {
+    $allowed_pages = array(
+        'frc-spider',
+        'frc-options',
+        'frc-import-data',
+        'frc-options-add-edit'
+    );
 
-    // js
-    wp_register_script( 'fat-rat-bootstrap-js', plugins_url( 'js/bootstrap.min.js', __FILE__ ));
-    wp_enqueue_script( 'fat-rat-bootstrap-js' );
-    wp_register_script( 'fat-rat-js', plugins_url( 'js/fatrat.js', __FILE__ ), array( 'jquery' ), '1.0.0',true );
-    wp_enqueue_script( 'fat-rat-js' );
+    if (in_array(strstr($hook,"frc-"), $allowed_pages)) {
+        // css
+        wp_register_style('fat-rat-bootstrap-css', plugins_url('css/bootstrap.min.css', __FILE__));
+        wp_enqueue_style('fat-rat-bootstrap-css');
+        wp_register_style('fat-rat-css', plugins_url('css/fatrat.css', __FILE__));
+        wp_enqueue_style('fat-rat-css');
+
+        // js
+        wp_register_script('fat-rat-bootstrap-js', plugins_url('js/bootstrap.min.js', __FILE__));
+        wp_enqueue_script('fat-rat-bootstrap-js');
+        wp_register_script('fat-rat-js', plugins_url('js/fatrat.js', __FILE__), array('jquery'), '1.0.0', true);
+        wp_enqueue_script('fat-rat-js');
+    }
 }
 add_action( 'admin_enqueue_scripts', 'frc_loading_assets' );
 
@@ -122,7 +139,7 @@ function frc_loading_menu()
     add_menu_page(
         __('胖鼠采集', 'Fat Rat Collect'),
         __('胖鼠采集', 'Fat Rat Collect'),
-        'administrator',
+        'publish_posts',
         'frc-collect',
         'frc_spider',
         plugins_url('images/', __FILE__) . 'fat-rat.png'
@@ -132,7 +149,7 @@ function frc_loading_menu()
         'frc-collect',
         __('采集中心', 'Fat Rat Collect'),
         __('采集中心', 'Fat Rat Collect'),
-        'administrator',
+        'publish_posts',
         'frc-spider',
         'frc_spider'
     );
@@ -141,7 +158,7 @@ function frc_loading_menu()
         'frc-collect',
         __('配置中心', 'Fat Rat Collect'),
         __('配置中心', 'Fat Rat Collect'),
-        'administrator',
+        'publish_posts',
         'frc-options',
         'frc_options'
     );
@@ -150,7 +167,7 @@ function frc_loading_menu()
         'frc-collect',
         __('数据中心', 'Fat Rat Collect'),
         __('数据中心', 'Fat Rat Collect'),
-        'administrator',
+        'publish_posts',
         'frc-import-data',
         'frc_import_data'
     );
@@ -159,7 +176,7 @@ function frc_loading_menu()
         'frc-collect',
         __('添加/修改(配置)', 'Fat Rat Collect'),
         __('添加/修改(配置)', 'Fat Rat Collect'),
-        'administrator',
+        'publish_posts',
         'frc-options-add-edit',
         'frc_options_add_edit'
     );

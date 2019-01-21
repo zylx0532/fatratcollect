@@ -79,14 +79,10 @@ class FRC_Import_Data extends WP_List_Table
      *
      * @param int $id snippet ID
      */
-    public static function delete_snippet($id)
+    public function delete_snippet($id)
     {
-
-        global $wpdb;
-        $table_name = "{$wpdb->prefix}fr_options";
-
-        $wpdb->delete(
-            $table_name, array('id' => $id), array('%d')
+        $this->wpdb->delete(
+            $this->table_post, array('id' => $id), array('%d')
         );
     }
 
@@ -152,9 +148,14 @@ class FRC_Import_Data extends WP_List_Table
             case 'post_type' :
             case 'link' :
             case 'is_post' :
-            case 'author' :
             case 'created' :
                 return esc_html($item[$column_name]);
+                break;
+            case 'author' :
+                if (get_userdata($item[$column_name]))
+                    return esc_html(get_userdata($item[$column_name])->data->display_name, 'Fat Rat Collect');
+                else
+                    return esc_html('未知', 'Fat Rat Collect');
                 break;
             case 'title':
                 return "<a href='{$item['link']}' target='_blank'>" . esc_html(mb_substr($item[$column_name], 0, 40)) . "</a><br /><span class='preview-article' value='{$item['id']}'><a href='#'>预览</a></span> | <span class='publish-articles' value='{$item['id']}'><a href='#'>发布</a></span>";
@@ -232,7 +233,8 @@ class FRC_Import_Data extends WP_List_Table
     {
 
         return array(
-            'bulk-delete' => esc_html__('暂不开放', 'Fat Rat Collect'),
+            'bulk-published' => esc_html__('发布', 'Fat Rat Collect'),
+            'bulk-delete'    => esc_html__('删除', 'Fat Rat Collect'),
         );
     }
 
@@ -288,15 +290,56 @@ class FRC_Import_Data extends WP_List_Table
         return $views;
     }
 
-
     public function process_bulk_action()
     {
+        // If the delete bulk action is triggered
+        if (
+            ( isset( $_POST['action'] ) && 'bulk-delete' === $_POST['action'] ) ||
+            ( isset( $_POST['action2'] ) && 'bulk-delete' === $_POST['action2'] )
+        ) {
+            $delete_ids = isset($_POST['snippets']) ? esc_sql( $_POST['snippets'] ) : [];
 
+            // loop over the array of record IDs and delete them
+            foreach ( $delete_ids as $id ) {
+                $this->delete_snippet( $id );
+            }
+
+            return;
+        } elseif (
+            ( isset( $_POST['action'] ) && 'bulk-published' === $_POST['action'] ) ||
+            ( isset( $_POST['action2'] ) && 'bulk-published' === $_POST['action2'] )
+        ) {
+
+            $activate_ids = isset($_POST['snippets']) ? esc_sql( $_POST['snippets'] ) : [];
+            $post_category = !empty($_POST['post_category']) ? esc_sql( $_POST['post_category'] ) : array(1);
+            $post_user = !empty($_POST['post_user']) ? esc_sql( $_POST['post_user'] ) : get_current_user_id();
+            $post_status = !empty($_POST['post_status']) ? sanitize_text_field( $_POST['post_status'] ) : 'publish';
+
+            $release_config = [];
+            $release_config['post_user'] = $post_user;
+            $release_config['post_status'] = $post_status;
+            $release_config['post_category'] = $post_category;
+
+            // loop over the array of record IDs and activate them
+            foreach ( $activate_ids as $id ) {
+                $article = $this->wpdb->get_row(
+                    "select * from $this->table_post where `id` =  " . $id,
+                    ARRAY_A
+                );
+                self::article_to_storage( $article, $release_config);
+            }
+
+            return;
+        }
     }
 
 
     public function system_publish_article(){
         $article_id = !empty($_REQUEST['article_id']) ? sanitize_text_field($_REQUEST['article_id']) : 0;
+        $post_category = !empty($_POST['post_category']) ? esc_sql( $_POST['post_category'] ) : array(1);
+        $post_user = !empty($_POST['post_user']) ? esc_sql( $_POST['post_user'] ) : get_current_user_id();
+        $post_status = !empty($_POST['post_status']) ? sanitize_text_field( $_POST['post_status'] ) : 'publish';
+
         if ($article_id === 0) {
             return ['code' => FRC_Api_Error::FAIL, 'msg' => '文章ID错误'];
         }
@@ -309,7 +352,12 @@ class FRC_Import_Data extends WP_List_Table
             return ['code' => FRC_Api_Error::FAIL, 'msg' => '亲,没找到这篇文章!'];
         }
 
-        if ($this->article_to_storage($article)) {
+        $release_config = [];
+        $release_config['post_user'] = $post_user;
+        $release_config['post_status'] = $post_status;
+        $release_config['post_category'] = $post_category;
+
+        if ($this->article_to_storage($article, $release_config)) {
             return ['code' => FRC_Api_Error::SUCCESS, 'msg' => 'Success.'];
         }
 
@@ -319,6 +367,10 @@ class FRC_Import_Data extends WP_List_Table
 
     public function system_preview_article(){
         $article_id = !empty($_REQUEST['article_id']) ? sanitize_text_field($_REQUEST['article_id']) : 0;
+        $post_category = !empty($_POST['post_category']) ? esc_sql( $_POST['post_category'] ) : array(1);
+        $post_user = !empty($_POST['post_user']) ? esc_sql( $_POST['post_user'] ) : get_current_user_id();
+        $post_status = 'draft';
+
         if ($article_id === 0) {
             return ['code' => FRC_Api_Error::FAIL, 'msg' => '文章ID错误'];
         }
@@ -331,7 +383,12 @@ class FRC_Import_Data extends WP_List_Table
             return ['code' => FRC_Api_Error::FAIL, 'msg' => '亲,没找到这篇文章!'];
         }
 
-        $preview_id = $this->article_to_storage($article, ['post_status' => 'draft']);
+        $release_config = [];
+        $release_config['post_user'] = $post_user;
+        $release_config['post_status'] = $post_status;
+        $release_config['post_category'] = $post_category;
+
+        $preview_id = $this->article_to_storage($article, $release_config);
 
         return ['code' => FRC_Api_Error::SUCCESS, 'msg' => 'ok.', 'result' => ['preview_url' => get_permalink($preview_id)]];
     }
@@ -399,14 +456,16 @@ class FRC_Import_Data extends WP_List_Table
     {
         if (empty($release_config)){
             $release_config['post_status'] = 'publish';
+            $release_config['post_user'] = get_current_user_id();
+            $release_config['post_category'] = array(1);
         }
         $post = array(
             'post_title' => $article['title'],
             'post_name' => md5($article['title']),
             'post_content' => $article['content'],
             'post_status' => $release_config['post_status'],
-            'post_author' => get_current_user_id(),
-            'post_category' => array(1),
+            'post_author' => $release_config['post_user'],
+            'post_category' => $release_config['post_category'],
             'tags_input' => '',
             'post_type' => 'post',
         );
@@ -416,8 +475,8 @@ class FRC_Import_Data extends WP_List_Table
             return wp_insert_post($post);
         }
 
-        // 发布
-        if ($post['post_status'] == 'publish'){
+        // 发布 待审核
+        if ($post['post_status'] == 'publish' || $post['post_status'] == 'pending'){
             if ($article_id = wp_insert_post($post)) {
                 $this->wpdb->update($this->table_post, ['is_post' => 1], ['id' => $article['id']], ['%d'], ['%d']);
                 return $article_id;
@@ -455,7 +514,7 @@ add_action( 'wp_ajax_frc_import_data_interface', 'frc_import_data_interface' );
 
 
 /**
- * 定时发布 cron
+ * 站群定时发布 cron
  */
 if (!wp_next_scheduled('frc_cron_publish_articles_hook')) {
     wp_schedule_event(time(), 'everyhalfhour', 'frc_cron_publish_articles_hook');
@@ -484,12 +543,49 @@ function frc_import_data()
             <li><a href="#multiplesites" data-toggle="tab">站群发布</a></li>
         </ul>
         <div class="tab-content">
-            <div class="tab-pane fade in active" id="home">
+            <div class="tab-pane fade in active row" id="home">
                 <form method="post">
-                    <?php
-                    $snippet_obj->prepare_items();
-                    $snippet_obj->display();
-                    ?>
+                    <div class="col-xs-10">
+                        <?php
+                        $snippet_obj->prepare_items();
+                        $snippet_obj->display();
+                        ?>
+                    </div>
+                    <div class="col-xs-2">
+                        <h5>发布分类:</h5>
+                        <ul>
+                        <?php foreach (get_categories(array('hide_empty' => false, 'order' => 'ASC', 'orderby' => 'id')) as $category): ?>
+                            <li><input type="checkbox" name="post_category[]" value="<?php echo $category->cat_ID; ?>" <?php if ($category->cat_ID == 1){ echo 'checked'; } ?>>&nbsp;<?php esc_html_e($category->cat_name, 'Fat Rat Collect'); ?></li>
+                        <?php endforeach; ?>
+                        </ul>
+                        <hr />
+                        <h5>发布作者:</h5>
+                        <select name="post_user">
+                            <?php
+                            foreach (get_users(array(
+                                'fields' => array('ID', 'user_nicename', 'display_name')
+                            )) as $user):?>
+                                <option value="<?php echo $user->ID;?>" <?php if($user->ID == get_current_user_id()) echo 'selected'; ?> ><?php echo $user->user_nicename . '(' . $user->display_name . ')';?></option>
+                            <?php endforeach;?>
+                        </select>
+                        <hr />
+                        <h5>文章状态:</h5>
+                        <ul>
+                            <?php foreach ([
+                                    'publish' => '发布',
+                                    'pending' => '待审核',
+                                    'draft' => '草稿',
+                                           ] as $val => $title): ?>
+                            <li><input type="radio" value="<?php esc_html_e($val, 'publish') ?>" name="post_status" <?php if ($val == 'publish') echo 'checked'; ?>> <?php esc_html_e($title, 'Fat Rat Collect') ?></li>
+                            <?php endforeach; ?>
+                        </ul>
+                        <br />
+                        <br />
+                        <div class="fixed"><img width="150" src="<?php echo plugin_dir_url(dirname(__FILE__)).'images/fat-rat-256x256.png'  ?>" /></div>
+
+                        <br />
+                        <p>Advanced customization </p>
+                    </div>
                 </form>
             </div>
 

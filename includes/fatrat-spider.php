@@ -89,11 +89,11 @@ class FRC_Spider
         $option_id              = !empty($_REQUEST['collect_history_relus_id']) ? sanitize_text_field($_REQUEST['collect_history_relus_id']) : '';
 
         if (!strstr($history_url, '{page}')){
-            return ['code' => FRC_Api_Error::FAIL, 'msg' => 'URL不正确。未包含 {page} 关键字'];
+            return ['code' => FRC_Api_Error::FAIL, 'msg' => 'URL不正确。未包含 {page} 关键字 or URL不能为空'];
         }
 
         if (empty($history_page_number)){
-            return ['code' => FRC_Api_Error::FAIL, 'msg' => '页码不能为空'];
+            return ['code' => FRC_Api_Error::FAIL, 'msg' => '请填写要采集的页面'];
         }
 
         $page_count = explode(',', $history_page_number);
@@ -103,7 +103,7 @@ class FRC_Spider
 
         $option = $this->get_option($option_id);
         if (!$option) {
-            return ['code' => FRC_Api_Error::FAIL, 'msg' => '未查询到配置, 配置ID错误'];
+            return ['code' => FRC_Api_Error::FAIL, 'msg' => '请选择一个有效的配置, 配置异常'];
         }
 
         if (parse_url($history_url)['host'] != parse_url($option['collect_list_url'])['host']){
@@ -173,7 +173,7 @@ class FRC_Spider
      * @param $option
      * @return bool
      */
-    protected function run_spider_list_page($option)
+    public function run_spider_list_page($option)
     {
         // TODO 错误信息再优化
         if ($option['collect_type'] != 'list'){
@@ -187,13 +187,12 @@ class FRC_Spider
             ->query(function($item) use ($option) {
                 // 新闻详情
 
-                // 如果没有域名头自动拼接一下
-                if (!isset(parse_url($item['link'])['host'])){
-                    $item['link'] = parse_url($option['collect_list_url'])['scheme'].'://'.parse_url($option['collect_list_url'])['host'].'/'.ltrim($item['link'], '/');
-                }
+                if (!empty($item['link'])) {
+                    // 如果没有域名头自动拼接一下
+                    if (!isset(parse_url($item['link'])['host'])){
+                        $item['link'] = parse_url($option['collect_list_url'])['scheme'].'://'.parse_url($option['collect_list_url'])['host'].'/'.ltrim($item['link'], '/');
+                    }
 
-                // 目前只爬当前域名
-                if (!empty($item['link']) && parse_url($item['link'])['host'] == parse_url($option['collect_list_url'])['host']) {
                     try {
                         $ql = $this->_QueryList($item['link'], $option['collect_remove_head'])
                             ->range($option['collect_content_range'])
@@ -426,6 +425,10 @@ class FRC_Spider
  */
 function frc_spider_interface()
 {
+    if(version_compare(PHP_VERSION,'7.0.0', '<')){
+        wp_send_json(['code' => 5003, 'msg' => '不支持PHP7以下版本, 当前PHP版本为'.phpversion().'. 请升级php后重试!']);
+        wp_die();
+    }
     $action_func = !empty($_REQUEST['action_func']) ? sanitize_text_field($_REQUEST['action_func']) : '';
     if (empty($action_func)){
         wp_send_json(['code' => 5001, 'msg' => 'Parameter error!']);
@@ -521,10 +524,9 @@ function frc_spider()
     <div class="wrap">
         <h1><?php esc_html_e('胖鼠爬虫', 'Fat Rat Collect') ?></h1>
         <p></p>
-        <span>胖鼠采集 要做Wordpress最好的采集小工具</span>
+        <span>Advanced customization </span>
         <p></p>
         <div>
-
             <!-- bootstrap tabs -->
             <ul class="nav nav-tabs">
                 <li class="active"><a href="#single_wx" data-toggle="tab">微信爬虫</a></li>
@@ -532,6 +534,7 @@ function frc_spider()
                 <li><a href="#list" data-toggle="tab">列表爬虫</a></li>
                 <li><a href="#historypage" data-toggle="tab">列表爬虫->分页数据爬取</a></li>
                 <li><a href="#details" data-toggle="tab">详情爬虫</a></li>
+                <li><a href="#autospider" data-toggle="tab">自动爬虫</a></li>
             </ul>
             <div class="tab-content spider-tab-content">
                 <input type="hidden" hidden id="request_url" value="<?php echo admin_url('admin-ajax.php'); ?>">
@@ -542,7 +545,6 @@ function frc_spider()
                             <th>微信文章地址</th>
                             <td>
                                 <textarea name="collect_wx_urls" cols="80" rows="14" placeholder="多篇文章使用回车区分,一行一个。每次不要太多、要对自己的服务器心里要有数"></textarea>
-                                <p>有些小功能 以后有人需要的话再做吧. 现在没空. 欢迎你给我需求.</p>
                             </td>
                         </tr>
                         <tr>
@@ -567,7 +569,7 @@ function frc_spider()
                             <th>简书文章地址</th>
                             <td>
                                 <textarea name="collect_js_urls" cols="80" rows="14" placeholder="多篇文章使用回车区分,一行一个"></textarea>
-                                <p>简书默认规则过滤了a标签,你们可以在配置中心看到.</p>
+                                <p>简书默认规则过滤了a标签,你们可以在配置中心看到,也可以自定义过滤任何内容.去尝试吧</p>
                             </td>
                         </tr>
                         <tr>
@@ -588,7 +590,7 @@ function frc_spider()
 <!--                列表爬虫-->
                 <div class="tab-pane fade spider-tab-content" id="list">
                     <?php
-                    if (!$options['list']) {
+                    if (!isset($options['list'])) {
                         echo '<p></p>';
                         echo "<h4><a href='". admin_url('admin.php?page=frc-options') ."'>亲爱的皮皮虾: 目前没有任何一个列表配置。皮皮虾我们走 </a></h4>";
                     } else {
@@ -621,9 +623,9 @@ function frc_spider()
 <!--                分页爬虫-->
                 <div class="tab-pane fade" id="historypage">
                     <?php
-                    if (!$options['list']) {
+                    if (!isset($options['list'])) {
                         echo '<p></p>';
-                        echo "<h4><a href='". admin_url('admin.php?page=frc-options') ."'>亲爱的皮皮虾: 目前没有任何一个详情配置。皮皮虾我们走 </a></h4>";
+                        echo "<h4><a href='". admin_url('admin.php?page=frc-options') ."'>亲爱的毛毛虫: 目前没有任何一个分页配置。毛毛虫我们走 </a></h4>";
                     } else {
                     ?>
                     <table class="form-table">
@@ -651,7 +653,7 @@ function frc_spider()
                             <th>选择页面的规则配置</th>
                             <td>
                                 <?php
-                                $string = '<select name="collect_history_relus">';
+                                $string = '<select name="collect_history_relus"><option value="0">请选择</option>';
                                 foreach ($options['list'] as $option) {
                                     $string .= '<option value="'.$option['id'].'">'.$option['collect_name'].'</option>';
                                 }
@@ -681,7 +683,7 @@ function frc_spider()
 <!--                详情爬虫-->
                 <div class="tab-pane fade" id="details">
                     <?php
-                    if (!$options['single']) {
+                    if (!isset($options['single'])) {
                         echo '<p></p>';
                         echo "<h4><a href='". admin_url('admin.php?page=frc-options') ."'>亲爱的皮皮: 目前没有任何一个详情配置。胖鼠我们走 </a></h4>";
                     } else {
@@ -698,7 +700,7 @@ function frc_spider()
                             <th>详情配套配置</th>
                             <td>
                                 <?php
-                                $string = '<select name="collect_details_relus">';
+                                $string = '<select name="collect_details_relus"><option value="0">请选择</option>';
                                 foreach ($options['single'] as $option) {
                                     if (in_array($option['collect_name'], FRC_Api_Error::BUTTON_DISABLED)){
                                         $string .= '<option disabled value="'.$option['id'].'">'.$option['collect_name'].'</option>';
@@ -728,6 +730,11 @@ function frc_spider()
                         </tr>
                     </table>
                     <?php } ?>
+                </div>
+<!--                自动爬虫-->
+                <div class="tab-pane fade" id="autospider">
+                    <p>已自动开启</p>
+                    <p>12小时爬取一次</p>
                 </div>
             </div>
         </div>

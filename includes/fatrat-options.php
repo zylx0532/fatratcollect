@@ -70,14 +70,10 @@ class FRC_Configuration_List_Table extends WP_List_Table
      *
      * @param int $id snippet ID
      */
-    public static function delete_snippet($id)
+    public function delete_snippet($id)
     {
-
-        global $wpdb;
-        $table_name = "{$wpdb->prefix}fr_options";
-
-        $wpdb->delete(
-            $table_name, array('id' => $id), array('%d')
+        $this->wpdb->delete(
+            $this->table_options, array('id' => $id), array('%d')
         );
     }
 
@@ -230,7 +226,7 @@ class FRC_Configuration_List_Table extends WP_List_Table
     {
 
         return array(
-            'bulk-delete' => esc_html__('暂未开放批量功能', 'Fat Rat Collect'),
+            'bulk-delete' => esc_html__('删除', 'Fat Rat Collect'),
         );
     }
 
@@ -288,7 +284,20 @@ class FRC_Configuration_List_Table extends WP_List_Table
 
     public function process_bulk_action()
     {
+        // If the delete bulk action is triggered
+        if (
+            ( isset( $_POST['action'] ) && 'bulk-delete' === $_POST['action'] ) ||
+            ( isset( $_POST['action2'] ) && 'bulk-delete' === $_POST['action2'] )
+        ) {
+            $delete_ids = esc_sql( $_POST['snippets'] );
 
+            // loop over the array of record IDs and delete them
+            foreach ( $delete_ids as $id ) {
+                $this->delete_snippet( $id );
+            }
+
+            return;
+        }
     }
 
 
@@ -415,8 +424,30 @@ class FRC_Configuration_List_Table extends WP_List_Table
 //                'collect_remove_head' => '0',
 //            ],
             [
-                'collect_name' => '胖鼠-心理咨询师-咨询页',
-                'collect_describe' => '胖鼠说: 这个采集的是列表页面, 页面编码UTF-8 文章中有些图片碎了，因图片名字是中文的。我去。稍后我兼容一下这点、列表地址: http://www.1879club.com/index.php?r=zixun',
+                'collect_name' => '胖鼠-御龙在天-最新新闻-综合新闻-列表页',
+                'collect_describe' => '胖鼠: 采集-列表页面, 页面编码GB2312 小提示 如果class有两个属性,选一个唯一的即可 | ul li 中间还可以加空格哦知道什么意思吗?',
+                'collect_type' => 'list',
+                'collect_list_url' => 'https://yl.qq.com/webplat/info/news_version3/118/430/m279/list_1.shtml',
+                'collect_list_range' => '.news_list ul li',
+                'collect_list_rules' => 'link%a:eq(1)|href|null',
+                'collect_content_range' => '.center_part',
+                'collect_content_rules' => 'title%.news_h2|text|null)(content%.news_content|html|null',
+                'collect_remove_head' => '1',
+            ],
+            [
+                'collect_name' => '胖鼠-寻仙新闻中心-最新新闻-列表页',
+                'collect_describe' => '胖鼠: 采集-列表页面, 页面编码UTF-8 曾经玩过这个游戏有感情了 小提示 仔细看配置 选择第二个a标签用 eq 语法',
+                'collect_type' => 'list',
+                'collect_list_url' => 'https://xx.qq.com/webplat/info/news_version3/154/2233/3889/m2702/list_1.shtml',
+                'collect_list_range' => '.down-nr>ul>li',
+                'collect_list_rules' => 'link%a:eq(1)|href|null',
+                'collect_content_range' => '.sub-cont',
+                'collect_content_rules' => 'title%.n_title|text|null)(content%.sub-nr|html|null',
+                'collect_remove_head' => '0',
+            ],
+            [
+                'collect_name' => '胖鼠-心理咨询师-列表页',
+                'collect_describe' => '胖鼠: 这个采集的是列表页面, 页面编码UTF-8 文章中有些图片碎了，因他的图片名字是中文的。真傻。',
                 'collect_type' => 'list',
                 'collect_list_url' => 'http://www.1879club.com/index.php?r=zixun',
                 'collect_list_range' => '.con_r>div[class=jiaowu]>ul>li',
@@ -426,8 +457,16 @@ class FRC_Configuration_List_Table extends WP_List_Table
                 'collect_remove_head' => '0',
             ],
             [
+                'collect_name' => '胖鼠-虎扑-体育新闻-详情页',
+                'collect_describe' => '胖鼠: 这采集是虎扑新闻详情页面, 页面编码UTF-8 这个列表也很棒,你可以自己去配置哦. 列表地址: https://voice.hupu.com/sports',
+                'collect_type' => 'single',
+                'collect_content_range' => '.voice-main',
+                'collect_content_rules' => 'title%.artical-title>h1|text|null)(content%.artical-content|html|null',
+                'collect_remove_head' => '0',
+            ],
+            [
                 'collect_name' => '胖鼠-直播吧-NBA新闻篮球-详情页',
-                'collect_describe' => '胖鼠说: 这个采集的是详情页面, 页面编码UTF-8 列表地址: https://news.zhibo8.cc/nba/more.htm',
+                'collect_describe' => '胖鼠: 这采集是直播8新闻详情页面, 页面编码UTF-8 列表地址: https://news.zhibo8.cc/nba/more.htm',
                 'collect_type' => 'single',
                 'collect_content_range' => '#main',
                 'collect_content_rules' => 'title%h1|text|null)(content%div[class=content]|html|null',

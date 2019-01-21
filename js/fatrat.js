@@ -4,6 +4,7 @@
     var request_url                     = $('#request_url').val();
     var success_redirect_url            = $('#success_redirect_url').val();
     var collect_name                    = '默认代号-全军出击';
+    var collect_describe                = '';
     var collect_type                    = 'list';
     var collect_remove_outer_link       = '1';
     var collect_remove_head             = '0';
@@ -78,7 +79,7 @@
         }
 
         var collect_details_urls   = $('textarea[name="collect_details_urls"]').val();
-        var collect_details_relus      = $('select[name="collect_details_relus"]').val();
+        var collect_details_relus  = $('select[name="collect_details_relus"]').val();
 
         ajax_collect_request_tool(request_url, {
             action_func: 'details_page',
@@ -208,10 +209,19 @@
         }
 
         var article_id   = $(this).attr('value');
+        var post_category = [];
+        $("input[type='checkbox']:checked").each(function (index, item) {
+            post_category.push($(this).val());
+        });
+        var post_user = $('select[name="post_user"]').val();
+        var post_status = $('input[name="post_status"]:checked').val();
 
         ajax_import_data_request_tool(request_url, {
             action_func: 'publish_article',
             article_id: article_id,
+            post_category: post_category,
+            post_user: post_user,
+            post_status: post_status,
         }, success_redirect_url);
     });
 
@@ -221,10 +231,19 @@
         }
 
         var article_id   = $(this).attr('value');
+        var post_category = [];
+        $("input[type='checkbox']:checked").each(function (index, item) {
+            post_category.push($(this).val());
+        });
+        var post_user = $('select[name="post_user"]').val();
+        var post_status = $('input[name="post_status"]:checked').val();
 
         ajax_import_data_request_tool(request_url, {
             action_func: 'preview_article',
             article_id: article_id,
+            post_category: post_category,
+            post_user: post_user,
+            post_status: post_status,
         }, success_redirect_url, '', 'preview_article');
     });
 
@@ -240,6 +259,10 @@
     if ($('input[type=radio][name=collect_type]:checked').val() == 'single'){
         $('.collect_type_radio_change').hide();
     }
+
+    $('#todo—more-button').on('click', function(){
+        $('.todo—more-show').attr("style","display:block;");
+    });
 
     $('input[type=radio][name=collect_type]').change(function () {
         if (this.value == 'list') {
@@ -301,7 +324,7 @@
                 }, 2000);
             },
             error: function(error) {
-                alert('error!,  出现这个错误不必惊慌. 可能是你的网络太差或服务器带宽小或 采集的时间太久超时了。你可以 数据中心看一下。是不是已经采集好了?  ');
+                alert('error!, 异常了! 出现这个错误不必惊慌. 可能是你的网络太差或服务器带宽小或 采集的时间太久超时了。你可以 数据中心看一下。是不是已经采集好了?  ');
                 if (progress_bar != ''){
                     $(progress_bar).css('width', '0%');
                 }
@@ -407,7 +430,7 @@
                 console.log(response);
             },
             error: function(error) {
-                alert('error!,  出现这个错误不必惊慌. 可能是你的网络太差或服务器带宽小或 采集的时间太久超时了。你可以 数据中心看一下。是不是已经采集好了?  ');
+                alert('error!, 异常了! 出现这个错误不必惊慌. 可能是你的网络太差或服务器带宽小或 采集的时间太久超时了。你可以 数据中心看一下。是不是已经采集好了?  ');
                 console.log('error:', error)
             }
         })
