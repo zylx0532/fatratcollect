@@ -458,7 +458,7 @@ add_action( 'wp_ajax_frc_import_data_interface', 'frc_import_data_interface' );
  * 定时发布 cron
  */
 if (!wp_next_scheduled('frc_cron_publish_articles_hook')) {
-    wp_schedule_event(time(), 'twohourly', 'frc_cron_publish_articles_hook');
+    wp_schedule_event(time(), 'everyhalfhour', 'frc_cron_publish_articles_hook');
 }
 
 function frc_publish_articles_timing_task()
