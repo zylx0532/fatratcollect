@@ -454,13 +454,14 @@ class FRC_Import_Data extends WP_List_Table
             if (strstr($article['title'], '翡翠') && $i < 3) {
                 $i++;
                 $release_config['post_category'] = array(array_rand([1, 2, 3, 4, 5]));
+                $this->article_to_storage($article);
             } elseif (strstr($article['title'], '玉') && $i < 3) {
                 $i++;
                 $release_config['post_category'] = array(6);
+                $this->article_to_storage($article);
             } else {
                 return false;
             }
-            $this->article_to_storage($article);
         });
 
         return ['code' => FRC_Api_Error::SUCCESS, 'msg' => 'Success.'];
