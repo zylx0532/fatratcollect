@@ -446,7 +446,7 @@ class FRC_Import_Data extends WP_List_Table
 
         // 1翡翠资讯 2天然翡翠 3翡翠知识 4翡翠解惑 5翡翠赏玩 6和田玉
         $i = 1;
-        collect($articles)->map(function ($article) use ($i) {
+        collect($articles)->map(function ($article) use (&$i) {
             $release_config = [];
             $release_config['post_status'] = 'publish';
             $release_config['post_user'] = get_current_user_id();
