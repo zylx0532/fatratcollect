@@ -236,6 +236,8 @@ add_action('admin_menu', 'frc_loading_menu');
  */
 function frc_more_schedules() {
     return array(
+        'seconds' => array('interval' => 1, 'display' => 'seconds'), // 每秒
+        'tenminutes' => array('interval' => 600, 'display' => 'Ten minutes'), // 十分钟
         'twohourly' => array('interval' => 7200, 'display' => 'Two Hourly'), // 两小时
         'fourhourly' => array('interval' => 14400, 'display' => 'Four Hourly'), // 四小时
         'eighthourly' => array('interval' => 28800, 'display' => 'Eight Hourly'), // 八小时

@@ -425,6 +425,48 @@ class FRC_Import_Data extends WP_List_Table
     }
 
 
+    public function system_auto_import_article($import_count = null){
+        if (empty($import_count)){
+            $count = !empty($_REQUEST['collect_count']) ? sanitize_text_field($_REQUEST['collect_count']) : 10;
+        } else {
+            $count = (int) $import_count ?: 1;
+        }
+
+        if ($count > 30){
+            return ['code' => FRC_Api_Error::FAIL, 'msg' => '数量超了. 回头考虑改改发布数量这个限制.'];
+        }
+
+        $articles = $this->wpdb->get_results(
+            "select * from $this->table_post where `is_post` = 0",
+            ARRAY_A
+        );
+        if (empty($articles)){
+            return ['code' => FRC_Api_Error::FAIL, 'msg' => '没库存文章了, 亲!'];
+        }
+
+        // 1翡翠资讯 2天然翡翠 3翡翠知识 4翡翠解惑 5翡翠赏玩 6和田玉
+        $i = 1;
+        collect($articles)->map(function ($article) use ($i) {
+            $release_config = [];
+            $release_config['post_status'] = 'publish';
+            $release_config['post_user'] = get_current_user_id();
+            $release_config['post_thumbnail'] = 'thumbnail1';
+            if (strstr($article['title'], '翡翠') && $i < 3) {
+                $i++;
+                $release_config['post_category'] = array(array_rand([1, 2, 3, 4, 5]));
+            } elseif (strstr($article['title'], '玉') && $i < 3) {
+                $i++;
+                $release_config['post_category'] = array(6);
+            } else {
+                return false;
+            }
+            $this->article_to_storage($article);
+        });
+
+        return ['code' => FRC_Api_Error::SUCCESS, 'msg' => 'Success.'];
+    }
+
+
     public function system_import_group_article(){
         if (!is_multisite()) {
             return ['code' => FRC_Api_Error::FAIL, 'msg' => '你的站点不是站群.不能用这个功能. !'];
@@ -586,6 +628,23 @@ if ($frc_cron_publish_article = get_option('frc_cron_publish_article')){
     add_action('frc_cron_publish_article_hook', 'frc_publish_article_timing_task');
 } else {
     wp_clear_scheduled_hook('frc_cron_publish_article_hook');
+}
+
+/**
+ * 自动发布
+ */
+function frc_auto_publish_article_timing_task()
+{
+    (new FRC_Import_Data())->system_auto_import_article(1);
+}
+if ($frc_cron_auto_publish_article = get_option('frc_cron_auto_publish_article')){
+    if (!wp_next_scheduled('frc_cron_auto_publish_article_hook')) {
+        wp_schedule_event(time(), $frc_cron_auto_publish_article, 'frc_cron_auto_publish_article_hook');
+    }
+
+    add_action('frc_cron_auto_publish_article_hook', 'frc_auto_publish_article_timing_task');
+} else {
+    wp_clear_scheduled_hook('frc_cron_auto_publish_article_hook');
 }
 
 function frc_import_data()
