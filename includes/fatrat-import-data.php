@@ -446,14 +446,15 @@ class FRC_Import_Data extends WP_List_Table
 
         // 1翡翠资讯 2天然翡翠 3翡翠知识 4翡翠解惑 5翡翠赏玩 6和田玉
         $i = 1;
-        collect($articles)->map(function ($article) use (&$i) {
+        $category = [1, 2, 3, 4, 5];
+        collect($articles)->map(function ($article) use (&$i, $category) {
             $release_config = [];
             $release_config['post_status'] = 'publish';
             $release_config['post_user'] = get_current_user_id();
             $release_config['post_thumbnail'] = 'thumbnail1';
             if (strstr($article['title'], '翡翠') && $i < 3) {
                 $i++;
-                $release_config['post_category'] = array(array_rand([1, 2, 3, 4, 5]));
+                $release_config['post_category'] = array($category[array_rand($category)]);
                 $this->article_to_storage($article);
             } elseif (strstr($article['title'], '玉') && $i < 3) {
                 $i++;
