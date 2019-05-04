@@ -772,6 +772,7 @@ function frc_import_data()
                 <p></p>
                 <p><h1>自动标签</h1></p>
                 <p><a href="http://www.fatrat.cn/fatrat/220.html" target="_blank">Auto Tags</a> （文章自动打标签）</p>
+                <p>注: 此功能不依托于胖鼠采集, 属于独立的扩展功能！</p>
                 <p>此功能是为文章自动打标签！</p>
                 <p>你只需要在标签管理里面把, 行业的标签输入进去！</p>
                 <p>新采集的文章在发布的同时就会自动把命中的标签追加上去。</p>
@@ -790,14 +791,15 @@ function frc_import_data()
             <div class="tab-pane fade" id="dynamiccontent"><p></p>
                 <p></p>
                 <p><h1>动态内容</h1></p>
-                <p><a href="" target="_blank">Dynamic Content</a> （文章自动添加动态内容）</p>
+                <p><a href="http://www.fatrat.cn/fatrat/229.html" target="_blank">Dynamic Content</a> （文章自动添加动态内容）</p>
+                <p>注: 此功能不依托于胖鼠采集, 属于独立的扩展功能！</p>
                 <p>此功能是为文章自动添加动态内容！</p>
                 <p>指在文章正文开头、结尾各插入一段摘要，插入的摘要内容来自: 同分类下 最近五天的随机文章，后续可支持自定义格式</p>
                 <p>文章正文前后插入内容后，对搜索引擎来说，相当于完全不同的文章，有利于收录，并且不影响用户阅读（段落已加了底色区分）。</p>
                 <p>动态插入内容胖鼠采集推荐使用！！！，对SEO收录非常有用，省时省力还省心！</p>
                 <?php if (get_option(FRC_Validation::FRC_VALIDATION_DYNAMIC_FIELDS) == '') { ?>
-                        <input placeholder="口令" size="12" name="dynamic-fields" />
-                        <input type="button" class="button button-primary" id="activation-dynamic-fields" value="激活" />
+                    <input placeholder="口令" size="12" name="dynamic-fields" />
+                    <input type="button" class="button button-primary" id="activation-dynamic-fields" value="激活" />
                 <?php } ?>
                 <?php if (get_option(FRC_Validation::FRC_VALIDATION_DYNAMIC_FIELDS) != '') { ?>
                     <p class="label label-success">激活成功</p>
